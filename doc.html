@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Canvas</title>
+    <style>
+        canvas {
+            border: 1px solid #9a1313;
+            margin: 20px;
+            background-color: #000000;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="feedbackCanvas" width="1000" height="1000"></canvas>
+
+<script>
+    const feedbackData = {
+        Marks: 5,
+        Feedback: [
+            {
+                Category: "Content Depth",
+                Comment: "The answer addresses the significance and criticisms of the Anti-Defection Law but misses details on key reforms proposed by committees like the Law Commission.",
+                Reference: { Page: 1, Coordinates: [[124, 346], [178, 554]] }
+            },
+            {
+                Category: "Conclusion",
+                Comment: "The concluding sentence is vague; it could be sharper, focusing on specific reforms like improving the impartiality of the Speaker.",
+                Reference: { Page: 2, Coordinates: [[112, 490], [188, 670]] }
+            },
+            {
+                Category: "Structure",
+                Comment: "The answer is well-organized into distinct sections (significance, criticisms, reforms), but transitions between sections could be smoother.",
+                Reference: { Page: 1, Coordinates: [[230, 610], [270, 780]] }
+            },
+            {
+                Category: "Innovation",
+                Comment: "Could have benefited from data/statistics or recent examples of defection cases to strengthen the argument.",
+                Reference: { Page: 2, Coordinates: [[148, 580], [220, 660]] }
+            },
+            {
+                Category: "Language",
+                Comment: "Mostly clear, but some minor grammatical errors (e.g., 'topping of' should be 'toppling of') affect readability.",
+                Reference: { Page: 1, Coordinates: [[150, 400], [180, 500]] }
+            }
+        ]
+    };
+
+    const canvas = document.getElementById('feedbackCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Load an image
+    const img = new Image();
+    img.src = 'upsc_img_1.jpg'; // Replace with the URL of your image
+
+    img.onload = () => {
+        // Draw the image on the canvas
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const startX = 20;
+        let startY = 30;
+        const lineHeight = 25;
+        const boxPadding = 10;
+        const boxWidth = 900;
+
+        ctx.font = '20px Arial';
+        ctx.fillStyle = 'black'; // Text color
+
+        // Draw title
+        ctx.fillText(`Marks: ${feedbackData.Marks}`, startX, startY);
+        startY += lineHeight * 2;
+
+        // Function to wrap text within a given width
+        function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+            const words = text.split(' ');
+            let line = '';
+            let lines = [];
+            for (let n = 0; n < words.length; n++) {
+                let testLine = line + words[n] + ' ';
+                let metrics = ctx.measureText(testLine);
+                let testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    lines.push(line);
+                    line = words[n] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line);
+            lines.forEach((line, index) => {
+                ctx.fillText(line, x, y + (index * lineHeight));
+            });
+            return lines.length; // Return number of lines
+        }
+
+        // Draw feedback sections inside boxes with text wrapping
+        feedbackData.Feedback.forEach(item => {
+            // Calculate how many lines are needed for the comment text
+            const categoryLines = 1;
+            const commentLines = wrapText(ctx, `Comment: ${item.Comment}`, 0, 0, boxWidth - 2 * boxPadding, lineHeight);
+            const referenceLines = 1;
+
+            // Calculate box height based on the total number of lines
+            const totalLines = categoryLines + commentLines + referenceLines;
+            const boxHeight = totalLines * lineHeight + boxPadding * 2;
+
+            // Draw the box
+            ctx.beginPath();
+            ctx.rect(startX, startY, boxWidth, boxHeight);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)'; // Box background color
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#9a1313'; // Box border color
+            ctx.stroke();
+
+            // Set text color back to black for content inside the box
+            ctx.fillStyle = 'black';
+
+            // Draw the text inside the box
+            ctx.fillText(`Category: ${item.Category}`, startX + boxPadding, startY + lineHeight);
+
+            // Wrap and draw the comment text inside the box
+            wrapText(ctx, `Comment: ${item.Comment}`, startX + boxPadding, startY + lineHeight * 2, boxWidth - 2 * boxPadding, lineHeight);
+
+            // Draw the reference text inside the box
+            ctx.fillText(`Reference: Page ${item.Reference.Page}`, startX + boxPadding, startY + lineHeight * (2 + commentLines));
+
+            // Move down for the next box
+            startY += boxHeight + 20; // Adding 20px space between boxes
+        });
+    };
+</script>
+
+</body>
+</html>
